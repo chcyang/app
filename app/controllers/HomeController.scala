@@ -1,7 +1,6 @@
 package controllers
 
 import javax.inject._
-import play.api._
 import play.api.mvc._
 
 /**
@@ -22,6 +21,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
     Ok(views.html.index())
   }
 
+  /**
+   * show file upload page
+   *
+   * @return
+   */
   def upload() = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.upload())
   }

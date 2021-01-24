@@ -5,26 +5,17 @@ import java.nio.file.Paths
 
 import com.google.common.io.Files
 import com.google.inject.{Inject, Singleton}
-import play.api.mvc.{AnyContent, BaseController, ControllerComponents, Request}
-import services.BacklogOpService
+import play.api.mvc.{BaseController, ControllerComponents}
+import services.{BacklogElasticsearchService, BacklogOpService}
 
 import scala.concurrent.ExecutionContext
 import scala.reflect.io.File
 
 @Singleton
-class BackLogFileController @Inject()(val controllerComponents: ControllerComponents, backlogOpService: BacklogOpService)
+class BackLogFileController @Inject()(val controllerComponents: ControllerComponents,
+                                      backlogOpService: BacklogOpService,
+                                      backlogElasticsearchService: BacklogElasticsearchService)
                                      (implicit ec: ExecutionContext) extends BaseController {
-
-  def getSpace() = Action.async {
-    implicit request: Request[AnyContent] =>
-      backlogOpService.getSpace().map {
-        response =>
-          Ok(response)
-      }.recover {
-        case exception: Exception => println(exception.getMessage)
-          NotFound("ErroR")
-      }
-  }
 
   def upload() = Action(parse.multipartFormData) { request =>
     request.body
@@ -36,7 +27,6 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
         val fileSize = picture.fileSize
         val contentType = picture.contentType
 
-        //        val fileString = new String(Files.toByteArray(picture.ref.toFile))
         val base64code = javax.xml.bind.DatatypeConverter.printBase64Binary(Files.toByteArray(picture.ref.toFile))
         val imgstr = javax.xml.bind.DatatypeConverter.parseBase64Binary(base64code)
 
@@ -53,5 +43,19 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
         Redirect(routes.HomeController.index).flashing("error" -> "Missing file")
       }
   }
+
+  /**
+   * search data from Elasticsearch
+   *
+   * @return
+   */
+  def doEsSearch() = Action.async {
+    backlogElasticsearchService.doSearch().map {
+      res => Ok(res)
+    }.recover {
+      case _ => NotFound("Es not found!")
+    }
+  }
+
 
 }
