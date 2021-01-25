@@ -5,8 +5,11 @@ import java.nio.file.Paths
 
 import com.google.common.io.Files
 import com.google.inject.{Inject, Singleton}
+import exception.AppException
+import play.api.Logger
 import play.api.mvc.{BaseController, ControllerComponents}
 import services.{BacklogElasticsearchService, BacklogOpService}
+import utils.AppExceptionHandler
 
 import scala.concurrent.ExecutionContext
 import scala.reflect.io.File
@@ -15,7 +18,10 @@ import scala.reflect.io.File
 class BackLogFileController @Inject()(val controllerComponents: ControllerComponents,
                                       backlogOpService: BacklogOpService,
                                       backlogElasticsearchService: BacklogElasticsearchService)
-                                     (implicit ec: ExecutionContext) extends BaseController {
+                                     (implicit ec: ExecutionContext)
+  extends BaseController with AppExceptionHandler {
+
+  private val logger = Logger(this.getClass)
 
   def upload() = Action(parse.multipartFormData) { request =>
     request.body
@@ -51,9 +57,22 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
    */
   def doEsSearch() = Action.async {
     backlogElasticsearchService.doSearch().map {
+      res =>
+        Ok(res)
+    }.recover {
+      case exception => errorHandle(exception)
+    }
+  }
+
+
+  def addIndex() = Action.async {
+    backlogElasticsearchService.addIndex().map {
       res => Ok(res)
     }.recover {
-      case _ => NotFound("Es not found!")
+      case exception: AppException => errorHandle(exception)
+      case unknownEx: Exception =>
+        logger.error("File search add index exception occur:", unknownEx)
+        errorHandle(unknownEx)
     }
   }
 

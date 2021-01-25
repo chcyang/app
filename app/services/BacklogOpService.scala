@@ -3,7 +3,7 @@ package services
 import com.google.inject.{Inject, Singleton}
 import config.BacklogGateWayConfig
 import gateways.{Params, WebService}
-import play.api.Logger
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.http.Status
 
 import scala.concurrent.Future
@@ -11,7 +11,7 @@ import scala.concurrent.Future
 @Singleton
 class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService: WebService) {
 
-  private val logger = Logger(this.getClass)
+  final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   def getSpace() = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
