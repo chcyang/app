@@ -1,8 +1,7 @@
 {
       "_source":{
          "excludes":[
-            "data",
-            "attachment.content"
+            "data"
          ]
       },
       "properties":{

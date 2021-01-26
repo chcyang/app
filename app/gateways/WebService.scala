@@ -39,11 +39,11 @@ class WebService @Inject()(baseConfig: BaseConfig, ws: WSClient)(implicit ec: Ex
   }
 
   def putRequest[T, S](endpoint: String,
-                        payload: S,
-                        params: Params = Params.empty,
-                        headers: Seq[(String, String)] = Seq.empty,
-                        timeout: Duration = baseConfig.serviceTimeout)
-                       (f: WSResponse => Future[T])(implicit wrt: BodyWritable[S]) = {
+                       payload: S,
+                       params: Params = Params.empty,
+                       headers: Seq[(String, String)] = Seq.empty,
+                       timeout: Duration = baseConfig.serviceTimeout)
+                      (f: WSResponse => Future[T])(implicit wrt: BodyWritable[S]) = {
     val responseF = put(endpoint, payload, params, headers, timeout)
     transformResponse(endpoint, Params.empty, responseF)(f)
   }
@@ -65,23 +65,23 @@ class WebService @Inject()(baseConfig: BaseConfig, ws: WSClient)(implicit ec: Ex
       .get()
 
 
-  protected def post[T](endpoint: String,
-                        payload: T,
-                        params: Params,
-                        headers: Seq[(String, String)],
-                        timeout: Duration)
-                       (implicit wrt: BodyWritable[T]) =
+  protected def post[T, S](endpoint: String,
+                           payload: S,
+                           params: Params,
+                           headers: Seq[(String, String)],
+                           timeout: Duration)
+                          (implicit wrt: BodyWritable[S]) =
     getRequestHolder(endpoint, params)
       .addHttpHeaders(headers: _*)
       .withRequestTimeout(timeout)
       .post(payload)
 
-  protected def put[T](endpoint: String,
-                        payload: T,
-                        params: Params,
-                        headers: Seq[(String, String)],
-                        timeout: Duration)
-                       (implicit wrt: BodyWritable[T]) =
+  protected def put[T, S](endpoint: String,
+                          payload: S,
+                          params: Params,
+                          headers: Seq[(String, String)],
+                          timeout: Duration)
+                         (implicit wrt: BodyWritable[S]) =
     getRequestHolder(endpoint, params)
       .addHttpHeaders(headers: _*)
       .withRequestTimeout(timeout)

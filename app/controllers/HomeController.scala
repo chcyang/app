@@ -29,4 +29,14 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   def upload = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.upload())
   }
+
+
+  /**
+   * show file search page
+   *
+   * @return
+   */
+  def filesearch = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.filesearch())
+  }
 }

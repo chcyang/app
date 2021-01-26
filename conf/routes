@@ -18,6 +18,8 @@ POST        /upload              controllers.BackLogFileController.upload
 
 GET         /upload              controllers.HomeController.upload
 
-GET         /filesearch          controllers.BackLogFileController.doEsSearch
+GET         /filesearch          controllers.HomeController.filesearch
+
+POST        /filesearch          controllers.BackLogFileController.doEsSearch
 
 GET         /addIndex            controllers.BackLogFileController.addIndex
