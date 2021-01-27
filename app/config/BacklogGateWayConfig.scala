@@ -14,6 +14,8 @@ class BacklogGateWayConfig @Inject()(config: Config) extends BaseConfig(config: 
 
   lazy val spaceApiPath = gateWayConfig.getString("api-path-get-space")
 
+  lazy val getAllIssueApiPath = gateWayConfig.getString("api-path-get-issues")
+
   lazy val backlogServiceTimeout = gateWayConfig.getDuration("service-timeout").toScala
 
   lazy val backlogApiKey = gateWayConfig.getString("backlog-api-key")
