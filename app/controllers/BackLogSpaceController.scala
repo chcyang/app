@@ -21,7 +21,7 @@ class BackLogSpaceController @Inject()(val controllerComponents: ControllerCompo
    *
    * @return
    */
-  def getSpace() = Action.async {
+  def getSpace = Action.async {
     implicit request: Request[AnyContent] =>
       backlogOpService.getSpace().map {
         response =>

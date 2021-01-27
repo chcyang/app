@@ -1,6 +1,7 @@
 package services
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.{Inject, Singleton}
 import config.ElasticsearchGateWayConfig
 import gateways.{ElasticsearchGateWay, Params}
@@ -9,7 +10,6 @@ import play.api.http.ContentTypes
 import play.api.routing.sird.QueryString
 import utils.DateTimeFactoryImpl
 
-import scala.jdk.CollectionConverters._
 import scala.util.Random
 
 @Singleton
@@ -21,6 +21,9 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   final private val searchEndpoint = gateWayConfig.searchEndpoint
+
+  // set mapper as scala Mode
+  mapper.registerModule(DefaultScalaModule)
 
   /**
    * get all docs from a certain index
@@ -43,16 +46,15 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
 
     val headers = Seq("Content-Type" -> ContentTypes.JSON)
     val requestBody = queryString.get("esQueryString")
-      .map { seq => for (term <- seq) yield Map("query" -> term, "minimum_should_match" -> "75%").asJava }
-      .map { contents => for (content <- contents) yield Map("attachment.content" -> content).asJava }
-      .map { matchFields => for (matchField <- matchFields) yield Map("match" -> matchField).asJava }
-      .map { seq => seq.asJava }
-      .map { should => Map("should" -> should).asJava }
-      .map { bool => Map("bool" -> bool).asJava }
-      .map { query => Map("query" -> query).asJava }
-      .getOrElse(Map().asJava)
+      .map { seq => for (term <- seq) yield Map("query" -> term, "minimum_should_match" -> "75%") }
+      .map { contents => for (content <- contents) yield Map("attachment.content" -> content) }
+      .map { matchFields => for (matchField <- matchFields) yield Map("match" -> matchField) }
+      .map { should => Map("should" -> should) }
+      .map { bool => Map("bool" -> bool) }
+      .map { query => Map("query" -> query) }
+      .getOrElse(Map())
 
-    val jsonBody = new ObjectMapper().writeValueAsString(requestBody)
+    val jsonBody = mapper.writeValueAsString(requestBody)
     logger.info(s"Es search queryString:$jsonBody")
     elasticsearchGateWay.doSearch(endpoint = apiUrl,
       payload = jsonBody,
@@ -75,7 +77,7 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
       "fileId" -> 10002,
       "uploadUser" -> "Test-User",
       "fileType" -> "pdf"
-    ).asJava
+    )
 
     val params = Params(
       "pipeline" -> "attachment",
@@ -119,7 +121,7 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
       "fileId" -> fileId,
       "uploadUser" -> uploadUser,
       "fileType" -> fileType
-    ).asJava
+    )
 
     val jsonBody = mapper.writeValueAsString(indexBody)
     elasticsearchGateWay.writeIndex(endpoint = apiUrl,

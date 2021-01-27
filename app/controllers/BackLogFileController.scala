@@ -27,7 +27,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
    *
    * @return
    */
-  def upload() = Action(parse.multipartFormData).async { request =>
+  def upload = Action(parse.multipartFormData).async { request =>
     request.body
       .file("picture")
       .map { picture =>
@@ -81,7 +81,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
    *
    * @return
    */
-  def getAll() = Action.async {
+  def getAll = Action.async {
     backlogElasticsearchService.getAll().map {
       res =>
         Ok(res)
@@ -99,7 +99,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
    *
    * @return json String
    */
-  def doEsSearch() = Action.async {
+  def doEsSearch = Action.async {
     implicit request: Request[AnyContent] =>
 
       request.body.asFormUrlEncoded.map {
@@ -128,7 +128,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
    *
    * @return json string
    */
-  def addIndex() = Action.async {
+  def addIndex = Action.async {
     backlogElasticsearchService.addIndex().map {
       res => Ok(res)
     }.recover {
