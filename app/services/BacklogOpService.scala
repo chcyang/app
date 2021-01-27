@@ -35,12 +35,21 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
     }
   }
 
-  def getSharedFiles(): Future[String] = {
+
+  /**
+   * find all work hours of a certain user
+   * and analysis work hours of every day
+   *
+   * @param assigneeId
+   * @return
+   */
+  def getAllIssueHours(assigneeId: String): Future[String] = {
 
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.getAllIssueApiPath
     val params = Params("apiKey" -> gateWayConfig.backlogApiKey,
-      "assigneeId" -> "373653"
+      "assigneeId[]" -> assigneeId
     )
+    //"assigneeId" -> "373653"
     webService.getResponseWithHeaders(endpoint, params = params)(backlogResponseTransform).map {
       response =>
         val mapper = new ObjectMapper
@@ -108,6 +117,12 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
   }
 
 
+  /**
+   * handle backlog request error
+   *
+   * @param response
+   * @return
+   */
   private def backlogResponseTransform(response: WSResponse) = {
     response.status match {
       case status if Status.isSuccessful(status) =>

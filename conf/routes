@@ -23,3 +23,5 @@ GET         /filesearch          controllers.HomeController.filesearch
 POST        /filesearch          controllers.BackLogFileController.doEsSearch
 
 GET         /addIndex            controllers.BackLogFileController.addIndex
+
+GET         /getallissue         controllers.BackLogSpaceController.getAllIssueHours(assignee: String)
