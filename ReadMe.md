@@ -1,7 +1,50 @@
+
+```
+docker-compose up  -d  elasticsearch
+```
+
+- install elasticserach plugin
+[Ingest Attachment Processor Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/master/ingest-attachment.html#ingest-attachment)
+
+if you start up you elasticsearch from docker, run blow command in docker container terminal
+```
+bin/elasticsearch-plugin install ingest-attachment
+```
+
+restart elasticsearch
+```$xslt
+docker container restart -t 1 elasticsearch
+```
+
+Use an attachment processor to decode the string and extract the file’s properties  
+create a pipeline
+```$xslt
+PUT _ingest/pipeline/attachment
+{
+  "description" : "Extract attachment information",
+  "processors" : [
+    {
+      "attachment" : {
+        "field" : "data"
+      }
+    }
+  ]
+}
+```
+
+create index (all use the default config setting)
+```$xslt
+PUT /backlog-attachment-001
+```
+
+create mapping for index
+```$xslt
+PUT /backlog-attachment-001/_mapping
 {
       "_source":{
          "excludes":[
-            "data"
+            "data",
+            "attachment.content"
          ]
       },
       "properties":{
@@ -81,3 +124,9 @@
          }
       }
 }
+```
+
+remove
+```
+bin/elasticsearch-plugin remove ingest-attachment
+```
