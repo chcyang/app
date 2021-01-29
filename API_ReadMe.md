@@ -1,15 +1,19 @@
-## Detail pages
+## Detail pages and apis
 
-GET         /space               
-
+### Pages
+//upload a file for create index doc  
 GET         /upload              
-
 POST        /upload              
 
+// search file index  
 GET         /filesearch          
-
 POST        /filesearch          
 
-GET         /addIndex           
 
+### Apis
+// show backlog space   
+GET         /space    
+// addd  a fixed index doc  
+GET         /addIndex       
+// get work hours of a certain user      
 GET         /getAllIssue(assignee: String)
