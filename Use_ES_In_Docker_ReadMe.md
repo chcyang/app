@@ -18,13 +18,13 @@ bin/elasticsearch-plugin install ingest-attachment
 ```
 
 - restart elasticsearch
-```$xslt
+```
 docker container restart -t 1 elasticsearch
 ```
 
 - Use an attachment processor to decode the string and extract the file’s properties  
 create a pipeline
-```$xslt
+```
 PUT _ingest/pipeline/attachment
 {
   "description" : "Extract attachment information",
@@ -39,12 +39,12 @@ PUT _ingest/pipeline/attachment
 ```
 
 - create index (all use the default config setting)
-```$xslt
+```
 PUT /backlog-attachment-001
 ```
 
 - create mapping for index
-```$xslt
+```
 PUT /backlog-attachment-001/_mapping
 {
       "_source":{
