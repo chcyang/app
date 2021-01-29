@@ -1,4 +1,4 @@
-package controllers
+package chc.controllers
 
 import javax.inject._
 import play.api.mvc._
@@ -18,7 +18,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * a path of `/`.
    */
   def index = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index())
+    Ok(chc.views.html.index())
   }
 
   /**
@@ -27,7 +27,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * @return
    */
   def upload = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.upload())
+    Ok(chc.views.html.upload())
   }
 
 
@@ -37,6 +37,6 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
    * @return
    */
   def filesearch = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.filesearch())
+    Ok(chc.views.html.filesearch())
   }
 }

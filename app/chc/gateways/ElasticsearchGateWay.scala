@@ -1,11 +1,11 @@
-package gateways
+package chc.gateways
 
+import chc.exception.AppException
+import chc.utils.{BaseClientError, BaseSystemFailure}
 import com.google.inject.{Inject, Singleton}
-import exception.AppException
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.http.Status
 import play.api.libs.ws.{DefaultBodyWritables, WSResponse}
-import utils.{BaseClientError, BaseSystemFailure}
 
 import scala.concurrent.{ExecutionContext, Future}
 

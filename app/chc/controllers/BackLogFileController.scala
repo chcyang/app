@@ -1,15 +1,16 @@
-package controllers
+package chc.controllers
 
 import java.nio.file.Paths
 
+import chc.exception.AppException
+import chc.models.FileUploadModel
+import chc.services.{BacklogElasticsearchService, BacklogOpService}
+import chc.utils.AppExceptionHandler
 import com.google.common.io.Files
 import com.google.inject.{Inject, Singleton}
-import exception.AppException
-import models.FileUploadModel
+import controllers.routes
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.mvc.{AnyContent, BaseController, ControllerComponents, _}
-import services.{BacklogElasticsearchService, BacklogOpService}
-import utils.AppExceptionHandler
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,7 +68,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
       }
       .getOrElse {
         // if file not found,return error
-        Future.successful(Redirect(routes.HomeController.index()).flashing("error" -> "Missing file"))
+        Future.successful(Redirect(chc.controllers.routes.HomeController.index()).flashing("error" -> "Missing file"))
       }
       .recover {
         case exception: AppException => errorHandle(exception)
@@ -120,7 +121,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
               errorHandle(unknownEx)
           }
       }.getOrElse(
-        Future.successful(Redirect(routes.HomeController.filesearch()))
+        Future.successful(Redirect(chc.controllers.routes.HomeController.filesearch()))
       )
   }
 

@@ -1,4 +1,4 @@
-package config
+package chc.config
 
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config

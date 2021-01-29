@@ -4,21 +4,21 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET         /                    controllers.HomeController.index
+GET         /                    chc.controllers.HomeController.index
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
 
-GET         /space               controllers.BackLogSpaceController.getSpace
+GET         /space               chc.controllers.BackLogSpaceController.getSpace
 
-GET         /upload              controllers.HomeController.upload
+GET         /upload              chc.controllers.HomeController.upload
 
-POST        /upload              controllers.BackLogFileController.upload
+POST        /upload              chc.controllers.BackLogFileController.upload
 
-GET         /filesearch          controllers.HomeController.filesearch
+GET         /filesearch          chc.controllers.HomeController.filesearch
 
-POST        /filesearch          controllers.BackLogFileController.doEsSearch
+POST        /filesearch          chc.controllers.BackLogFileController.doEsSearch
 
-GET         /addIndex            controllers.BackLogFileController.addIndex
+GET         /addIndex            chc.controllers.BackLogFileController.addIndex
 
-GET         /getAllIssue         controllers.BackLogSpaceController.getAllIssueHours(assignee: String)
+GET         /getAllIssue         chc.controllers.BackLogSpaceController.getAllIssueHours(assignee: String)

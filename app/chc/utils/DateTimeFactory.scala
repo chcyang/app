@@ -1,4 +1,4 @@
-package utils
+package chc.utils
 
 import java.time.{Clock, LocalDateTime}
 

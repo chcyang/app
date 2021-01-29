@@ -1,4 +1,4 @@
-package models
+package chc.models
 
 case class FileUploadModel(
                             data: String,

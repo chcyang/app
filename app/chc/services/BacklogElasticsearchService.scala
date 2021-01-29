@@ -1,14 +1,14 @@
-package services
+package chc.services
 
+import chc.config.ElasticsearchGateWayConfig
+import chc.gateways.{ElasticsearchGateWay, Params}
+import chc.utils.DateTimeFactoryImpl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.{Inject, Singleton}
-import config.ElasticsearchGateWayConfig
-import gateways.{ElasticsearchGateWay, Params}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.http.ContentTypes
 import play.api.routing.sird.QueryString
-import utils.DateTimeFactoryImpl
 
 import scala.concurrent.Future
 import scala.util.Random

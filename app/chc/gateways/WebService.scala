@@ -1,7 +1,7 @@
-package gateways
+package chc.gateways
 
+import chc.config.BaseConfig
 import com.google.inject.{Inject, Singleton}
-import config.BaseConfig
 import play.api.Logger
 import play.api.libs.ws.{BodyWritable, WSClient, WSResponse}
 

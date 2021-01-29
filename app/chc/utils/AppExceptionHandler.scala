@@ -1,6 +1,6 @@
-package utils
+package chc.utils
 
-import exception.AppException
+import chc.exception.AppException
 import play.api.libs.ws.DefaultBodyWritables
 import play.api.mvc.BaseController
 

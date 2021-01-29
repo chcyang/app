@@ -1,4 +1,4 @@
-package utils
+package chc.utils
 
 sealed trait Message {
   def messageContent: String
