@@ -9,14 +9,11 @@ GET         /                    controllers.HomeController.index
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
 
-
-GET         /login               gateways.GetWsClient.gateWay
-
 GET         /space               controllers.BackLogSpaceController.getSpace
 
-POST        /upload              controllers.BackLogFileController.upload
-
 GET         /upload              controllers.HomeController.upload
+
+POST        /upload              controllers.BackLogFileController.upload
 
 GET         /filesearch          controllers.HomeController.filesearch
 
@@ -24,4 +21,4 @@ POST        /filesearch          controllers.BackLogFileController.doEsSearch
 
 GET         /addIndex            controllers.BackLogFileController.addIndex
 
-GET         /getallissue         controllers.BackLogSpaceController.getAllIssueHours(assignee: String)
+GET         /getAllIssue         controllers.BackLogSpaceController.getAllIssueHours(assignee: String)

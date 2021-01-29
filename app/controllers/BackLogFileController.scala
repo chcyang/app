@@ -29,7 +29,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
    */
   def upload = Action(parse.multipartFormData).async { request =>
     request.body
-      .file("picture")
+      .file("docfile")
       .map { picture =>
         // only get the last part of the filename
         // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
@@ -52,6 +52,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
         uploadModel
       }
       .map {
+        // write index for file
         model =>
           for {
             addIndexRes <- backlogElasticsearchService.addIndex(
@@ -65,6 +66,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
           } yield Ok(addIndexRes)
       }
       .getOrElse {
+        // if file not found,return error
         Future.successful(Redirect(routes.HomeController.index()).flashing("error" -> "Missing file"))
       }
       .recover {

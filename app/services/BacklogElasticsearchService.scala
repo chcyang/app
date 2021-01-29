@@ -10,6 +10,7 @@ import play.api.http.ContentTypes
 import play.api.routing.sird.QueryString
 import utils.DateTimeFactoryImpl
 
+import scala.concurrent.Future
 import scala.util.Random
 
 @Singleton
@@ -30,7 +31,7 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
    *
    * @return json sting
    */
-  def getAll() = {
+  def getAll(): Future[String] = {
     val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_search"
     elasticsearchGateWay.getAll(apiUrl)
   }
@@ -41,7 +42,7 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
    * @param queryString
    * @return json string
    */
-  def doSearch(queryString: QueryString) = {
+  def doSearch(queryString: QueryString): Future[String] = {
     val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_search"
 
     val headers = Seq("Content-Type" -> ContentTypes.JSON)
@@ -66,7 +67,7 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
    *
    * @return
    */
-  def addIndex() = {
+  def addIndex(): Future[String] = {
     val docId = getDocId("backlog-attachment")
     val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"
 
@@ -106,7 +107,7 @@ class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchG
                fileId: Int,
                uploadUser: String,
                fileName: String,
-               source: String) = {
+               source: String): Future[String] = {
 
     val docId = getDocId("backlog-attachment")
     val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"

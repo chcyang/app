@@ -22,6 +22,11 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
+  /**
+   * get backlof user space
+   *
+   * @return
+   */
   def getSpace(): Future[String] = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
     val params = Params("apiKey" -> gateWayConfig.backlogApiKey)
@@ -68,17 +73,17 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
                 if (startDate == Some(null) || dueDate == Some(null)
                   || actualHours == Some(null) || estimatedHours == Some(null)) None
                 else {
-                  val startDateC = LocalDateTime.parse(startDate.getOrElse("").toString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
-                  val dueDateC = LocalDateTime.parse(dueDate.getOrElse("").toString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
-                  println(startDateC, dueDateC)
-                  val start = Timestamp.valueOf(startDateC).getTime
-                  val due = Timestamp.valueOf(dueDateC).getTime
+                  logger.debug(s"startDate:${startDate} dueDate:${dueDate} actualHours:${actualHours}  estimatedHours:${estimatedHours}")
+                  val startDateObj = LocalDateTime.parse(startDate.getOrElse("").toString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                  val dueDateObj = LocalDateTime.parse(dueDate.getOrElse("").toString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                  val start = Timestamp.valueOf(startDateObj).getTime
+                  val due = Timestamp.valueOf(dueDateObj).getTime
                   val between = (due - start) / (24 * 60 * 60 * 1000)
                   val actualHoursData = actualHours.getOrElse(0).toString.toFloat
                   val estimatedHoursData = estimatedHours.getOrElse(0).toString.toFloat
                   val averageActulHours = actualHoursData / between
                   val averageEstimateHours = estimatedHoursData / between
-                  val hoursSeq = for (i <- 0.toLong until between) yield (startDateC.plusDays(i).toString -> (averageActulHours, averageEstimateHours))
+                  val hoursSeq = for (i <- 0.toLong until between) yield (startDateObj.plusDays(i).toString -> (averageActulHours, averageEstimateHours))
                   val hoursMap = hoursSeq.map { value => (value._1 -> value._2) }.toMap
                   Map(id -> hoursMap)
                 }
@@ -110,7 +115,12 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
     }
   }
 
-  def getAllIssues() = {
+  /**
+   * get list of all issue
+   *
+   * @return Future(String)
+   */
+  def getAllIssues(): Future[String] = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
     val params = Params("apiKey" -> gateWayConfig.backlogApiKey)
     webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params)(backlogResponseTransform)
@@ -123,7 +133,7 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
    * @param response
    * @return
    */
-  private def backlogResponseTransform(response: WSResponse) = {
+  private def backlogResponseTransform(response: WSResponse): Future[String] = {
     response.status match {
       case status if Status.isSuccessful(status) =>
         logger.debug(response.body)
