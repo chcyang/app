@@ -10,15 +10,15 @@ import com.google.inject.{Inject, Singleton}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.http.ContentTypes
 import play.api.routing.sird.QueryString
+import play.shaded.oauth.org.apache.commons.codec.digest.DigestUtils
 
 import scala.concurrent.Future
-import scala.util.Random
 
 @Singleton
 class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: ElasticsearchGateWay,
                                                 gateWayConfig: ElasticsearchGateWayConfig,
                                                 dateTimeFactory: DateTimeFactoryImpl,
-                                                mapper: ObjectMapper) extends BacklogElasticsearchService{
+                                                mapper: ObjectMapper) extends BacklogElasticsearchService {
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -69,21 +69,23 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
    * @return
    */
   def addIndex(): Future[String] = {
-    val docId = getDocId("backlog-attachment")
-    val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"
 
     val headers = Seq("Content-Type" -> ContentTypes.JSON)
     val indexBody = Map("source" -> "YXX地区",
-      "filename" -> "测试文档",
+      "filename" -> "テストドキュメント",
       "data" -> "UWJveCBlbmFibGVzIGxhdW5jaGluZyBzdXBwb3J0ZWQsIGZ1bGx5LW1hbmFnZWQsIFJFU1RmdWwgRWxhc3RpY3NlYXJjaCBTZXJ2aWNlIGluc3RhbnRseS4g",
       "fileId" -> 10002,
       "uploadUser" -> "Test-User",
-      "fileType" -> "pdf"
+      "fileType" -> "pdf",
+      "source" -> ""
     )
 
     val params = Params(
       "pipeline" -> "attachment",
       "pretty" -> "")
+
+    val docId = getDocId("backlog-attachment", "10002" + "テストドキュメント" + "")
+    val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"
 
     val jsonBody = mapper.writeValueAsString(indexBody)
     elasticsearchGateWay.writeIndex(endpoint = apiUrl,
@@ -110,7 +112,7 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
                fileName: String,
                source: String): Future[String] = {
 
-    val docId = getDocId("backlog-attachment")
+    val docId = getDocId("backlog-attachment", fileId.toString + fileName + source)
     val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"
 
     val params = Params(
@@ -137,10 +139,9 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
    * @param indexPrefix
    * @return docId:String
    */
-  private def getDocId(indexPrefix: String): String = {
-    val dateTime = dateTimeFactory.now().format(dateTimeFactory.dateTimeFormatter)
-    val randomSuffix = Random.alphanumeric.take(8).mkString
-    val docId = s"${indexPrefix}_${dateTime}_${randomSuffix}"
+  private def getDocId(indexPrefix: String, fileUniqueName: String): String = {
+    val md5 = DigestUtils.md5Hex(fileUniqueName)
+    val docId = s"${indexPrefix}_${md5}"
     docId
   }
 }
