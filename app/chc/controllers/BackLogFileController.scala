@@ -167,13 +167,18 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
     }
 
     //    Future.sequence(indexResponse)
-    indexResponse.map {
-      res => Ok
-    }.recover {
-      case exception: AppException => errorHandle(exception)
-      case unknownEx: Exception =>
-        logger.error("Shared Files add index bulk process exception occur:", unknownEx)
-        errorHandle(unknownEx)
-    }
+    indexResponse
+      .flatMap {
+        responseList =>
+          Future.sequence(responseList)
+            .map {
+              res => Ok("bulk add index ok!")
+            }.recover {
+            case exception: AppException => errorHandle(exception)
+            case unknownEx: Exception =>
+              logger.error("Shared Files add index bulk process exception occur:", unknownEx)
+              errorHandle(unknownEx)
+          }
+      }
   }
 }

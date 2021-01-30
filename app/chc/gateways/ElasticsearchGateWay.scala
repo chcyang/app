@@ -69,10 +69,10 @@ class ElasticsearchGateWay @Inject()(webService: WebService)
         logger.debug(response.body)
         Future.successful(response.body)
       case status if Status.isClientError(status) =>
-        logger.error(response.body)
+        logger.error("ClientError:" + response.body)
         throw new AppException(BaseClientError(response.body))
       case status if Status.isServerError(status) =>
-        logger.error(response.body)
+        logger.error("ServerError" + response.body)
         throw new AppException(BaseSystemFailure(response.body))
       case _ =>
         logger.error(response.body)
