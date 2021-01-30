@@ -1,5 +1,6 @@
 package chc.gateways
 
+import chc.adapter.WService
 import chc.config.BaseConfig
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
@@ -9,7 +10,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class WebService @Inject()(baseConfig: BaseConfig, ws: WSClient)(implicit ec: ExecutionContext) {
+class WebService @Inject()(baseConfig: BaseConfig, ws: WSClient)(implicit ec: ExecutionContext) extends WService{
 
   val logger = Logger(this.getClass)
 
@@ -35,7 +36,7 @@ class WebService @Inject()(baseConfig: BaseConfig, ws: WSClient)(implicit ec: Ex
                         timeout: Duration = baseConfig.serviceTimeout)
                        (f: WSResponse => Future[T])(implicit wrt: BodyWritable[S]) = {
     val responseF = post(endpoint, payload, params, headers, timeout)
-    transformResponse(endpoint, Params.empty, responseF)(f)
+    transformResponse(endpoint, params, responseF)(f)
   }
 
   def putRequest[T, S](endpoint: String,
@@ -45,7 +46,7 @@ class WebService @Inject()(baseConfig: BaseConfig, ws: WSClient)(implicit ec: Ex
                        timeout: Duration = baseConfig.serviceTimeout)
                       (f: WSResponse => Future[T])(implicit wrt: BodyWritable[S]) = {
     val responseF = put(endpoint, payload, params, headers, timeout)
-    transformResponse(endpoint, Params.empty, responseF)(f)
+    transformResponse(endpoint, params, responseF)(f)
   }
 
   protected def get(endpoint: String,
@@ -118,4 +119,8 @@ case class Params(value: (String, String)*) {
 
 object Params {
   val empty = Params()
+}
+
+object WebService {
+  def apply(baseConfig: BaseConfig, ws: WSClient)(implicit ec: ExecutionContext): WebService = new WebService(baseConfig, ws)(ec)
 }

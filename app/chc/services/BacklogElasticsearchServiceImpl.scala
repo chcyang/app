@@ -14,10 +14,10 @@ import scala.concurrent.Future
 import scala.util.Random
 
 @Singleton
-class BacklogElasticsearchService @Inject()(elasticsearchGateWay: ElasticsearchGateWay,
-                                            gateWayConfig: ElasticsearchGateWayConfig,
-                                            dateTimeFactory: DateTimeFactoryImpl,
-                                            mapper: ObjectMapper) {
+class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: ElasticsearchGateWay,
+                                                gateWayConfig: ElasticsearchGateWayConfig,
+                                                dateTimeFactory: DateTimeFactoryImpl,
+                                                mapper: ObjectMapper) {
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 

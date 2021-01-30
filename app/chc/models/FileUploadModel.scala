@@ -6,5 +6,5 @@ case class FileUploadModel(
                             fileId: Int,
                             uploadUser: String,
                             fileName: String,
-                            source: String
+                            source: Option[String]
                           )

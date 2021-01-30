@@ -4,11 +4,10 @@ import java.nio.file.Paths
 
 import chc.exception.AppException
 import chc.models.FileUploadModel
-import chc.services.{BacklogElasticsearchService, BacklogOpService}
+import chc.services.{BacklogElasticsearchServiceImpl, BacklogOperatorServiceImpl}
 import chc.utils.AppExceptionHandler
 import com.google.common.io.Files
 import com.google.inject.{Inject, Singleton}
-import controllers.routes
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.mvc.{AnyContent, BaseController, ControllerComponents, _}
 
@@ -16,8 +15,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BackLogFileController @Inject()(val controllerComponents: ControllerComponents,
-                                      backlogOpService: BacklogOpService,
-                                      backlogElasticsearchService: BacklogElasticsearchService)
+                                      backlogOpService: BacklogOperatorServiceImpl,
+                                      backlogElasticsearchService: BacklogElasticsearchServiceImpl)
                                      (implicit ec: ExecutionContext)
   extends BaseController with AppExceptionHandler {
 
@@ -44,7 +43,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
           fileId = 10003,
           uploadUser = "Test-uploadUser",
           fileName = filename.toString,
-          source = "Wiki")
+          source = Option("Wiki"))
 
         //        val imgstr = javax.xml.bind.DatatypeConverter.parseBase64Binary(base64code)
         //        val file = File(s"/tmp/picture/$filename")
@@ -62,7 +61,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
               fileId = model.fileId,
               uploadUser = model.uploadUser,
               fileName = model.fileName,
-              source = model.source
+              source = model.source.getOrElse("")
             )
           } yield Ok(addIndexRes)
       }

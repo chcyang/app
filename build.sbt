@@ -11,11 +11,13 @@ lazy val root = (project in file("."))
       guice,
       ws, // Calling REST APIs with Play WS
       "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test,
+      specs2 % Test
     ),
     scalacOptions ++= Seq(
       "-feature",
       "-deprecation",
       "-Xfatal-warnings"
-    )
+    ),
+    javaOptions in Test += "-Dconfig.resource=" + System.getProperty("config.resource", "test.conf")
   )
 

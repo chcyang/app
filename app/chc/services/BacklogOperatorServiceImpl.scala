@@ -4,9 +4,11 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import chc.adapter.{BacklogOperatorService, WService}
 import chc.config.BacklogGateWayConfig
 import chc.exception.AppException
-import chc.gateways.{Params, WebService}
+import chc.gateways.Params
+import chc.models.FileUploadModel
 import chc.utils.{BaseClientError, BaseSystemFailure}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -18,9 +20,11 @@ import play.api.libs.ws.WSResponse
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService: WebService)(implicit ec: ExecutionContext) {
+class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, val webService: WService)(implicit ec: ExecutionContext)
+  extends BacklogOperatorService {
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  final private val params = Params("apiKey" -> gateWayConfig.backlogApiKey)
 
   /**
    * get backlof user space
@@ -29,8 +33,7 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
    */
   def getSpace(): Future[String] = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
-    val params = Params("apiKey" -> gateWayConfig.backlogApiKey)
-    webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params) {
+    webService.getResponseWithHeaders(endpoint, params = params, timeout = gateWayConfig.serviceTimeout) {
       case response => if (response.status == Status.OK) {
         logger.info(response.body)
         Future.successful(response.body)
@@ -51,11 +54,9 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
   def getAllIssueHours(assigneeId: String): Future[String] = {
 
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.getAllIssueApiPath
-    val params = Params("apiKey" -> gateWayConfig.backlogApiKey,
-      "assigneeId[]" -> assigneeId
-    )
+    val paramsSpec = params ++ Params("assigneeId[]" -> assigneeId)
     //"assigneeId" -> "373653"
-    webService.getResponseWithHeaders(endpoint, params = params)(backlogResponseTransform).map {
+    webService.getResponseWithHeaders(endpoint, params = paramsSpec, timeout = gateWayConfig.serviceTimeout)(backlogResponseTransform).map {
       response =>
         val mapper = new ObjectMapper
         mapper.registerModule(DefaultScalaModule)
@@ -118,14 +119,50 @@ class BacklogOpService @Inject()(gateWayConfig: BacklogGateWayConfig, webService
   /**
    * get list of all issue
    *
-   * @return Future(String)
-   */
+   * @return Future[String]
+   **/
   def getAllIssues(): Future[String] = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
-    val params = Params("apiKey" -> gateWayConfig.backlogApiKey)
     webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params)(backlogResponseTransform)
   }
 
+
+  /**
+   *
+   * @return
+   */
+  def getAllFiles(): Future[List[FileUploadModel]] = {
+    val projectId = "11881668"
+    val filepath = ""
+    val endpoint = gateWayConfig.baseUrl + gateWayConfig.getALlFilesApiPath.format(projectId, filepath)
+    logger.debug(endpoint)
+    webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params)(backlogResponseTransform)
+      .map {
+        response =>
+          val mapper = new ObjectMapper
+          mapper.registerModule(DefaultScalaModule)
+          val files = mapper.readValue(response, classOf[List[Map[String, Object]]])
+          files.map {
+            file =>
+              val fileType = file.get("type")
+              val fileId = file.get("id")
+              val fileName = file.get("name")
+              val uploadUser = file.get("CreatedUser").map {
+                user =>
+                  mapper.readValue(user.toString, classOf[Map[String, String]]).getOrElse("name", "").toString
+              }
+
+              FileUploadModel(
+                data = "",
+                fileType = fileType.getOrElse("").toString,
+                fileId = fileId.getOrElse(0).toString.toInt,
+                uploadUser = uploadUser.getOrElse(""),
+                fileName = fileName.getOrElse("").toString,
+                source = Option("")
+              )
+          }
+      }
+  }
 
   /**
    * handle backlog request error
