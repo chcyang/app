@@ -2,9 +2,9 @@ package chc.controllers
 
 import java.nio.file.Paths
 
+import chc.adapter.{BacklogElasticsearchService, BacklogOperatorService}
 import chc.exception.AppException
 import chc.models.FileUploadModel
-import chc.services.{BacklogElasticsearchServiceImpl, BacklogOperatorServiceImpl}
 import chc.utils.AppExceptionHandler
 import com.google.common.io.Files
 import com.google.inject.{Inject, Singleton}
@@ -15,8 +15,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BackLogFileController @Inject()(val controllerComponents: ControllerComponents,
-                                      backlogOpService: BacklogOperatorServiceImpl,
-                                      backlogElasticsearchService: BacklogElasticsearchServiceImpl)
+                                      backlogOpService: BacklogOperatorService,
+                                      backlogElasticsearchService: BacklogElasticsearchService)
                                      (implicit ec: ExecutionContext)
   extends BaseController with AppExceptionHandler {
 
@@ -168,7 +168,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
 
     //    Future.sequence(indexResponse)
     indexResponse.map {
-      res =>  Ok
+      res => Ok
     }.recover {
       case exception: AppException => errorHandle(exception)
       case unknownEx: Exception =>

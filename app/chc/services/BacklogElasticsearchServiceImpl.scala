@@ -1,5 +1,6 @@
 package chc.services
 
+import chc.adapter.BacklogElasticsearchService
 import chc.config.ElasticsearchGateWayConfig
 import chc.gateways.{ElasticsearchGateWay, Params}
 import chc.utils.DateTimeFactoryImpl
@@ -17,7 +18,7 @@ import scala.util.Random
 class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: ElasticsearchGateWay,
                                                 gateWayConfig: ElasticsearchGateWayConfig,
                                                 dateTimeFactory: DateTimeFactoryImpl,
-                                                mapper: ObjectMapper) {
+                                                mapper: ObjectMapper) extends BacklogElasticsearchService{
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
