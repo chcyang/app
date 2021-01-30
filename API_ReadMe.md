@@ -56,4 +56,5 @@ show the user's work hours of day(actualHours,estimateHours) when the day have a
 }
 ```
 // get all shared files and create index  
+not finish yet(from now on, elasticsearch can't process data stream from a api response content-type as  application/octet-stream)  
 GET         /addIndexBulk(projectId: String, dirPath: String)
