@@ -1,7 +1,7 @@
 package chc.controllers
 
+import chc.adapter.BacklogOperatorService
 import chc.exception.AppException
-import chc.services.BacklogOperatorServiceImpl
 import chc.utils.AppExceptionHandler
 import com.google.inject.{Inject, Singleton}
 import org.slf4j.{Logger, LoggerFactory}
@@ -10,7 +10,7 @@ import play.api.mvc.{AnyContent, BaseController, ControllerComponents, Request}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BackLogSpaceController @Inject()(val controllerComponents: ControllerComponents, backlogOpService: BacklogOperatorServiceImpl)
+class BackLogSpaceController @Inject()(val controllerComponents: ControllerComponents, backlogOpService: BacklogOperatorService)
                                       (implicit ec: ExecutionContext)
   extends BaseController with AppExceptionHandler {
 

@@ -18,6 +18,8 @@ class BacklogGateWayConfig @Inject()(config: Config) extends BaseConfig(config: 
 
   lazy val getALlFilesApiPath = gateWayConfig.getString("api-path-get-all-files")
 
+  lazy val downLoadFileApiPath = gateWayConfig.getString("api-path-download-file")
+
   lazy val backlogServiceTimeout = gateWayConfig.getDuration("service-timeout").toScala
 
   lazy val backlogApiKey = gateWayConfig.getString("backlog-api-key")

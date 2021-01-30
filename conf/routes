@@ -22,3 +22,5 @@ POST        /filesearch          chc.controllers.BackLogFileController.doEsSearc
 GET         /addIndex            chc.controllers.BackLogFileController.addIndex
 
 GET         /getAllIssue         chc.controllers.BackLogSpaceController.getAllIssueHours(assignee: String)
+
+GET         /addIndexBulk        chc.controllers.BackLogFileController.addIndexBulk(projectId: String, dirPath: String)

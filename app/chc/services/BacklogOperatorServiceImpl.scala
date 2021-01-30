@@ -129,10 +129,12 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
 
   /**
    *
+   * @param projectId
+   * @param filepath
    * @return
    */
-  def getAllFiles(): Future[List[FileUploadModel]] = {
-    val projectId = "11881668"
+  def getAllFiles(projectId: String, filepath: String): Future[List[FileUploadModel]] = {
+    val projectId = "146597"
     val filepath = ""
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.getALlFilesApiPath.format(projectId, filepath)
     logger.debug(endpoint)
@@ -162,6 +164,13 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
               )
           }
       }
+  }
+
+
+  def downLoadFile(projectId: String, fileId: Int): Future[String] = {
+    val endpoint = gateWayConfig.baseUrl + gateWayConfig.downLoadFileApiPath.format(projectId, fileId)
+    val headers = Seq("Accept" -> "application/octet-stream")
+    webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params, headers = headers)(backlogResponseTransform)
   }
 
   /**

@@ -141,5 +141,39 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
     }
   }
 
+  /**
+   * Shared Files add index bulk process
+   *
+   * @param projectId
+   * @param dirPath
+   * @return
+   */
+  def addIndexBulk(projectId: String, dirPath: String) = Action.async {
 
+    val fileListF: Future[List[FileUploadModel]] = backlogOpService.getAllFiles(projectId, dirPath)
+    val indexResponse = fileListF.map {
+      fileList =>
+        fileList.map {
+          file =>
+            for {
+              body <- backlogOpService.downLoadFile(projectId, file.fileId)
+              res <- Future.successful {
+                val base64 = javax.xml.bind.DatatypeConverter.printBase64Binary(body.getBytes())
+                file.copy(data = base64)
+              }
+              index <- backlogElasticsearchService.addIndex(res.data, res.fileType, res.fileId, res.uploadUser, res.fileName, res.source.getOrElse(""))
+            } yield index
+        }
+    }
+
+    //    Future.sequence(indexResponse)
+    indexResponse.map {
+      res =>  Ok
+    }.recover {
+      case exception: AppException => errorHandle(exception)
+      case unknownEx: Exception =>
+        logger.error("Shared Files add index bulk process exception occur:", unknownEx)
+        errorHandle(unknownEx)
+    }
+  }
 }
