@@ -20,7 +20,10 @@ import play.api.libs.ws.WSResponse
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, val webService: WService)(implicit ec: ExecutionContext)
+class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConfig,
+                                           val webService: WService,
+                                           mapper: ObjectMapper)
+                                          (implicit ec: ExecutionContext)
   extends BacklogOperatorService {
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
@@ -33,14 +36,9 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
    */
   def getSpace(): Future[String] = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
-    webService.getResponseWithHeaders(endpoint, params = params, timeout = gateWayConfig.serviceTimeout) {
-      case response => if (response.status == Status.OK) {
-        logger.info(response.body)
-        Future.successful(response.body)
-      } else {
-        Future.failed(new RuntimeException("Get backlog space error"))
-      }
-    }
+    webService.getResponseWithHeaders(endpoint,
+      params = params,
+      timeout = gateWayConfig.serviceTimeout)(backlogResponseTransform)
   }
 
 
@@ -56,13 +54,14 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.getAllIssueApiPath
     val paramsSpec = params ++ Params("assigneeId[]" -> assigneeId)
     //"assigneeId" -> "373653"
-    webService.getResponseWithHeaders(endpoint, params = paramsSpec, timeout = gateWayConfig.serviceTimeout)(backlogResponseTransform).map {
+    webService.getResponseWithHeaders(endpoint,
+      params = paramsSpec,
+      timeout = gateWayConfig.serviceTimeout)(backlogResponseTransform).map {
       response =>
-        val mapper = new ObjectMapper
         mapper.registerModule(DefaultScalaModule)
         val issues = mapper.readValue(response, classOf[List[Map[String, Object]]])
 
-        val issueMaps = issues.map {
+        val issueMaps = issues.flatMap {
           map =>
             map.get("id").map {
               id =>
@@ -75,37 +74,36 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
                   || actualHours == Some(null) || estimatedHours == Some(null)) None
                 else {
                   logger.debug(s"startDate:${startDate} dueDate:${dueDate} actualHours:${actualHours}  estimatedHours:${estimatedHours}")
-                  val startDateObj = LocalDateTime.parse(startDate.getOrElse("").toString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
-                  val dueDateObj = LocalDateTime.parse(dueDate.getOrElse("").toString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                  val startDateObj = LocalDateTime.parse(startDate.fold("")(_.toString), DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                  val dueDateObj = LocalDateTime.parse(dueDate.fold("")(_.toString), DateTimeFormatter.ISO_ZONED_DATE_TIME)
                   val start = Timestamp.valueOf(startDateObj).getTime
                   val due = Timestamp.valueOf(dueDateObj).getTime
                   val between = (due - start) / (24 * 60 * 60 * 1000)
-                  val actualHoursData = actualHours.getOrElse(0).toString.toFloat
-                  val estimatedHoursData = estimatedHours.getOrElse(0).toString.toFloat
-                  val averageActulHours = actualHoursData / between
+                  val actualHoursData = actualHours.fold(0.0)(_.toString.toFloat)
+                  val estimatedHoursData = estimatedHours.fold(0.0)(_.toString.toFloat)
+                  val averageActualHours = actualHoursData / between
                   val averageEstimateHours = estimatedHoursData / between
-                  val hoursSeq = for (i <- 0.toLong until between) yield (startDateObj.plusDays(i).toString -> (averageActulHours, averageEstimateHours))
+                  val hoursSeq = for (i <- 0.toLong until between) yield (startDateObj.plusDays(i).toString -> (averageActualHours, averageEstimateHours))
                   val hoursMap = hoursSeq.map { value => (value._1 -> value._2) }.toMap
                   Map(id -> hoursMap)
                 }
             }
-              .filterNot(_ == None)
-        }.filterNot(_ == None)
+        }
 
         // find parent issue id list
         val parentIssueIdList = issues.map(v => v.get("parentIssueId"))
-          .map(_.flatMap(Option(_)))
-          .filterNot(_ == None).toSet
+          .flatMap(_.flatMap(Option(_)))
+          .toSet // get duplicate id list
 
         // filter parent issue for avoid add hours twice
-        val actualIssueList = issueMaps.flatMap {
-          _.get
-        }.filterNot {
-          map => parentIssueIdList.contains(Option(map._1))
-        }
+        val actualIssueList = issueMaps
+          .flatten
+          .filterNot {
+            map => parentIssueIdList.contains(map._1)
+          }
 
         val result = actualIssueList
-          .flatMap(_._2)
+          .flatMap(_._2) // get work hour list
           .groupBy(_._1) // group the data of same day
           .view.mapValues(seq => seq.map(_._2) // get hours list
           .reduce((a, b) => (a._1 + b._1, a._2 + b._2))) // collect hours of same day(actualHours,estimateHours)
@@ -134,14 +132,13 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
    * @return
    */
   def getAllFiles(projectId: String, filepath: String): Future[List[FileUploadModel]] = {
-//    val projectId = "146597"
-//    val filepath = ""
+    //    val projectId = "146597"
+    //    val filepath = ""
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.getALlFilesApiPath.format(projectId, filepath)
     logger.debug(endpoint)
     webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params)(backlogResponseTransform)
       .map {
         response =>
-          val mapper = new ObjectMapper
           mapper.registerModule(DefaultScalaModule)
           val files = mapper.readValue(response, classOf[List[Map[String, Object]]])
           files.map {
@@ -151,15 +148,15 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
               val fileName = file.get("name")
               val uploadUser = file.get("CreatedUser").map {
                 user =>
-                  mapper.readValue(user.toString, classOf[Map[String, String]]).getOrElse("name", "").toString
+                  mapper.readValue(user.toString, classOf[Map[String, String]]).get("name")
               }
 
               FileUploadModel(
                 data = "",
-                fileType = fileType.getOrElse("").toString,
+                fileType = fileType.fold("")(_.toString),
                 fileId = fileId.getOrElse(0).toString.toInt,
-                uploadUser = uploadUser.getOrElse(""),
-                fileName = fileName.getOrElse("").toString,
+                uploadUser = uploadUser.fold("")(_.toString),
+                fileName = fileName.fold("")(_.toString),
                 source = Option("")
               )
           }
@@ -179,7 +176,9 @@ class BacklogOperatorServiceImpl @Inject()(gateWayConfig: BacklogGateWayConfig, 
    * @param response
    * @return
    */
-  private def backlogResponseTransform(response: WSResponse): Future[String] = {
+  private def backlogResponseTransform(response: WSResponse): Future[String]
+
+  = {
     response.status match {
       case status if Status.isSuccessful(status) =>
         logger.debug(response.body)
