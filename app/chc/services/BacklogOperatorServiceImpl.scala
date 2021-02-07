@@ -46,7 +46,7 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
    * find all work hours of a certain user
    * and analysis work hours of every day
    *
-   * @param assigneeId
+   * @param assigneeId the use id you want gather
    * @return
    */
   def getAllIssueHours(assigneeId: String): Future[String] = {
@@ -70,10 +70,12 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
                 val startDate = map.get("startDate")
                 val dueDate = map.get("dueDate")
 
-                if (startDate == Some(null) || dueDate == Some(null)
-                  || actualHours == Some(null) || estimatedHours == Some(null)) None
+                // only the task have complete can be collect
+                // and all the collect data should not be null
+                if (startDate.contains(null) || dueDate.contains(null)
+                  || actualHours.contains(null) || estimatedHours.contains(null)) None
                 else {
-                  logger.debug(s"startDate:${startDate} dueDate:${dueDate} actualHours:${actualHours}  estimatedHours:${estimatedHours}")
+                  logger.debug(s"startDate:$startDate dueDate:$dueDate actualHours:$actualHours  estimatedHours:$estimatedHours")
                   val startDateObj = LocalDateTime.parse(startDate.fold("")(_.toString), DateTimeFormatter.ISO_ZONED_DATE_TIME)
                   val dueDateObj = LocalDateTime.parse(dueDate.fold("")(_.toString), DateTimeFormatter.ISO_ZONED_DATE_TIME)
                   val start = Timestamp.valueOf(startDateObj).getTime
@@ -83,8 +85,8 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
                   val estimatedHoursData = estimatedHours.fold(0.0)(_.toString.toFloat)
                   val averageActualHours = actualHoursData / between
                   val averageEstimateHours = estimatedHoursData / between
-                  val hoursSeq = for (i <- 0.toLong until between) yield (startDateObj.plusDays(i).toString -> (averageActualHours, averageEstimateHours))
-                  val hoursMap = hoursSeq.map { value => (value._1 -> value._2) }.toMap
+                  val hoursSeq = for (i <- 0.toLong until between) yield startDateObj.plusDays(i).toString -> (averageActualHours, averageEstimateHours)
+                  val hoursMap = hoursSeq.map { value => value._1 -> value._2 }.toMap
                   Map(id -> hoursMap)
                 }
             }
@@ -102,9 +104,10 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
             map => parentIssueIdList.contains(map._1)
           }
 
+        // collect work hours by date
         val result = actualIssueList
-          .flatMap(_._2) // get work hour list
-          .groupBy(_._1) // group the data of same day
+          .flatMap(_._2) // get work hours list
+          .groupBy(_._1) // group work hours of same day
           .view.mapValues(seq => seq.map(_._2) // get hours list
           .reduce((a, b) => (a._1 + b._1, a._2 + b._2))) // collect hours of same day(actualHours,estimateHours)
           .toMap
@@ -118,7 +121,7 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
    * get list of all issue
    *
    * @return Future[String]
-   **/
+   * */
   def getAllIssues(): Future[String] = {
     val endpoint = gateWayConfig.baseUrl + gateWayConfig.spaceApiPath
     webService.getResponseWithHeaders(endpoint, timeout = gateWayConfig.serviceTimeout, params = params)(backlogResponseTransform)
@@ -126,9 +129,10 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
 
 
   /**
+   * get file list of the special project and path
    *
-   * @param projectId
-   * @param filepath
+   * @param projectId project you want check
+   * @param filepath  full path of directory you want check
    * @return
    */
   def getAllFiles(projectId: String, filepath: String): Future[List[FileUploadModel]] = {
@@ -151,10 +155,11 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
                   mapper.readValue(user.toString, classOf[Map[String, String]]).get("name")
               }
 
+              // build a FileUploadModel for response
               FileUploadModel(
                 data = "",
                 fileType = fileType.fold("")(_.toString),
-                fileId = fileId.getOrElse(0).toString.toInt,
+                fileId = fileId.fold(0)(_.toString.toInt),
                 uploadUser = uploadUser.fold("")(_.toString),
                 fileName = fileName.fold("")(_.toString),
                 source = Option("")
@@ -173,12 +178,10 @@ class BacklogOperatorServiceImpl @Inject()(val gateWayConfig: BacklogGateWayConf
   /**
    * handle backlog request error
    *
-   * @param response
+   * @param response request body
    * @return
    */
-  private def backlogResponseTransform(response: WSResponse): Future[String]
-
-  = {
+  private def backlogResponseTransform(response: WSResponse): Future[String] = {
     response.status match {
       case status if Status.isSuccessful(status) =>
         logger.debug(response.body)
