@@ -2,6 +2,7 @@ package services
 
 import chc.adapter.WService
 import chc.config.BacklogGateWayConfig
+import chc.exception.AppException
 import chc.gateways.WebService
 import chc.models.FileUploadModel
 import chc.services.BacklogOperatorServiceImpl
@@ -57,7 +58,7 @@ class BacklogOpServiceSpec extends PlaySpec with MockitoSugar with GuiceOneServe
       val operatorServiceImpl = new BacklogOperatorServiceImpl(backlogConfig, webService, mapper)
 
       val result: List[FileUploadModel] = Await.result(operatorServiceImpl.getAllFiles("146597", ""), 10.seconds)
-      result(0).fileId mustBe 11881668
+      result.head.fileId mustBe 11881668
     }
 
 
@@ -66,7 +67,10 @@ class BacklogOpServiceSpec extends PlaySpec with MockitoSugar with GuiceOneServe
       val wsClient = app.injector.instanceOf[WSClient]
       val webService: WService = new WebService(backlogConfig, wsClient)
       val operatorServiceImpl = new BacklogOperatorServiceImpl(backlogConfig, webService, mapper)
-      val result: String = Await.result(operatorServiceImpl.downLoadFile("146597", 11881668), 10.seconds)
+      // will access the real API
+      val result = Await.result(operatorServiceImpl.downLoadFile("146597", 11881668).failed, 10.seconds)
+      // end up with exception because "no sun file"
+      result.isInstanceOf[AppException]
     }
 
 

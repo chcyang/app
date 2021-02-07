@@ -3,7 +3,6 @@ package chc.services
 import chc.adapter.BacklogElasticsearchService
 import chc.config.ElasticsearchGateWayConfig
 import chc.gateways.{ElasticsearchGateWay, Params}
-import chc.utils.DateTimeFactoryImpl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.{Inject, Singleton}
@@ -16,13 +15,12 @@ import scala.concurrent.Future
 
 @Singleton
 class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: ElasticsearchGateWay,
-                                                gateWayConfig: ElasticsearchGateWayConfig,
-                                                dateTimeFactory: DateTimeFactoryImpl,
+                                                elasticsearchGateWayConfig: ElasticsearchGateWayConfig,
                                                 mapper: ObjectMapper) extends BacklogElasticsearchService {
 
   final private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
-  final private val searchEndpoint = gateWayConfig.searchEndpoint
+  final private val searchEndpoint = elasticsearchGateWayConfig.searchEndpoint
 
   // set mapper as scala Mode
   mapper.registerModule(DefaultScalaModule)
@@ -33,18 +31,18 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
    * @return json sting
    */
   def getAll(): Future[String] = {
-    val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_search"
+    val apiUrl = s"$searchEndpoint/${elasticsearchGateWayConfig.fileSearchIndex}/_search"
     elasticsearchGateWay.getAll(apiUrl)
   }
 
   /**
    * post a querystring to search file contents form elasticsearch
    *
-   * @param queryString
+   * @param queryString query of search from elasticsearch
    * @return json string
    */
   def doSearch(queryString: QueryString): Future[String] = {
-    val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_search"
+    val apiUrl = s"$searchEndpoint/${elasticsearchGateWayConfig.fileSearchIndex}/_search"
 
     val headers = Seq("Content-Type" -> ContentTypes.JSON)
     val requestBody = queryString.get("esQueryString")
@@ -85,7 +83,7 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
       "pretty" -> "")
 
     val docId = getDocId("backlog-attachment", "10002" + "テストドキュメント" + "")
-    val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"
+    val apiUrl = s"$searchEndpoint/${elasticsearchGateWayConfig.fileSearchIndex}/_doc/$docId"
 
     val jsonBody = mapper.writeValueAsString(indexBody)
     elasticsearchGateWay.writeIndex(endpoint = apiUrl,
@@ -97,12 +95,12 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
   /**
    * add index doc by params
    *
-   * @param data
-   * @param fileType
-   * @param fileId
-   * @param uploadUser
-   * @param fileName
-   * @param source
+   * @param data       file content base64
+   * @param fileType   file type
+   * @param fileId     file id in storage
+   * @param uploadUser upload user name
+   * @param fileName   file name
+   * @param source     file source
    * @return json string
    */
   def addIndex(data: String,
@@ -112,8 +110,8 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
                fileName: String,
                source: String): Future[String] = {
 
-    val docId = getDocId("backlog-attachment", fileId.toString + fileName + source)
-    val apiUrl = s"$searchEndpoint/${gateWayConfig.fileSearchIndex}/_doc/$docId"
+    val docId = getDocId(elasticsearchGateWayConfig.indexPrefix, fileId.toString + fileName + source)
+    val apiUrl = s"$searchEndpoint/${elasticsearchGateWayConfig.fileSearchIndex}/_doc/$docId"
 
     val params = Params(
       "pipeline" -> "attachment",
@@ -136,12 +134,12 @@ class BacklogElasticsearchServiceImpl @Inject()(elasticsearchGateWay: Elasticsea
 
   /**
    *
-   * @param indexPrefix
+   * @param indexPrefix prefix of file search index
    * @return docId:String
    */
   private def getDocId(indexPrefix: String, fileUniqueName: String): String = {
     val md5 = DigestUtils.md5Hex(fileUniqueName)
-    val docId = s"${indexPrefix}_${md5}"
+    val docId = s"${indexPrefix}_$md5"
     docId
   }
 }

@@ -32,6 +32,9 @@ class ElasticsearchGateWayServiceSpec extends PlaySpec with GuiceOneServerPerSui
       .build()
   }
 
+  /**
+   * just a sample of test code
+   */
   "test server logic" in {
     val wsClient = app.injector.instanceOf[WSClient]
     val myPublicAddress = s"localhost:$port"
@@ -44,4 +47,6 @@ class ElasticsearchGateWayServiceSpec extends PlaySpec with GuiceOneServerPerSui
 
     response.status mustBe 200
   }
+
+  //TODO implement the test code when there have a complicate logic in ElasticsearchGateWayService
 }

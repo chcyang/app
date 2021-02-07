@@ -15,4 +15,6 @@ class ElasticsearchGateWayConfig @Inject()(config: Config) {
   lazy val esServiceTimeout = esConfig.getDuration("service-timeout").toScala
 
   lazy val fileSearchIndex = esConfig.getString("file-search-index")
+
+  lazy val indexPrefix = esConfig.getString("file-search-index-docId-prefix")
 }
