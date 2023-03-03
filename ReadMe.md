@@ -5,7 +5,7 @@
 - Requirement:
     - docker 1.13.0+
     - elasticsearch 7.10.1
-    - play framework 2.8.7    
+    - play framework 2.8.19    
     - scala 2.13.3
     - JDK 8 or 11
     
