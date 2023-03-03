@@ -67,7 +67,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
       }
       .getOrElse {
         // if file not found,return error
-        Future.successful(Redirect(chc.controllers.routes.HomeController.index()).flashing("error" -> "Missing file"))
+        Future.successful(Redirect(chc.controllers.routes.HomeController.index).flashing("error" -> "Missing file"))
       }
       .recover {
         case exception: AppException => errorHandle(exception)
@@ -119,9 +119,7 @@ class BackLogFileController @Inject()(val controllerComponents: ControllerCompon
               logger.error("File search exception occur:", unknownEx)
               errorHandle(unknownEx)
           }
-      }.getOrElse(
-        Future.successful(Redirect(chc.controllers.routes.HomeController.filesearch()))
-      )
+      }.getOrElse(Future.successful(Redirect(chc.controllers.routes.HomeController.filesearch)))
   }
 
 
